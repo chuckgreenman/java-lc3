@@ -5,6 +5,8 @@ public class LC3 {
     private static final int MAX_ADDRESSABLE_MEMORY = 65536;
     private static final int REGISTER_COUNT = 10;
     private static final int PC_START = 0x3000;
+    private static final int KEYBOARD_STATUS_REGISTER = 0xFE00;
+    private static final int KEYBOARD_DATA_REGISTER = 0xFE02;
 
     private final int[] memory = new int[MAX_ADDRESSABLE_MEMORY];
     private final int[] registers = new int[REGISTER_COUNT];
@@ -103,16 +105,57 @@ public class LC3 {
         registers[Register.R7.ordinal()] = registers[Register.PC.ordinal()];
 
         if (long_flag != 0) {
-            long_pc_offset = signExtend(instruction & 0x7FF, 11);
-            registers[Register.PC.ordinal()] = long_pc_offset;
+            int long_program_counter_offset = signExtend(
+                instruction & 0x7FF,
+                11
+            );
+            registers[Register.PC.ordinal()] = long_program_counter_offset;
         } else {
             int r1 = (instruction >> 6) & 0x7;
             registers[Register.PC.ordinal()] = registers[r1];
         }
     }
 
+    public void load(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int program_counter_offset = signExtend(instruction & 0x1FF, 9);
+
+        registers[r0] = memoryRead(
+            registers[Register.PC.ordinal()] + program_counter_offset
+        );
+        updateFlags(r0);
+    }
+
     public void memoryWrite(int address, int value) {
         memory[address] = value;
+    }
+
+    private boolean checkKey() {
+        try {
+            return System.in.available() > 0;
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private int getChar() {
+        try {
+            return System.in.read();
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int memoryRead(int address) {
+        if (address == KEYBOARD_STATUS_REGISTER) {
+            if (checkKey()) {
+                memory[KEYBOARD_STATUS_REGISTER] = (1 << 15);
+                memory[KEYBOARD_DATA_REGISTER] = getChar();
+            } else {
+                memory[KEYBOARD_STATUS_REGISTER] = 0;
+            }
+        }
+        return memory[address];
     }
 
     public void run() {
@@ -131,6 +174,7 @@ public class LC3 {
                     add(instruction);
                     break;
                 case OP_LD:
+                    load(instruction);
                     break;
                 case OP_ST:
                     break;
