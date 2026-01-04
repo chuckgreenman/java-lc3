@@ -10,6 +10,7 @@ public class LC3 {
 
     private final int[] memory = new int[MAX_ADDRESSABLE_MEMORY];
     private final int[] registers = new int[REGISTER_COUNT];
+    private boolean running;
 
     public static void main(String[] args) {
         LC3 vm = new LC3();
@@ -207,9 +208,32 @@ public class LC3 {
         return memory[address];
     }
 
+    public void trap(int instruction) {
+        int trapVector = instruction & 0xFF;
+        Trap trap = Trap.fromInt(trapVector);
+
+        switch (trap) {
+            case TRAP_GETC:
+                break;
+            case TRAP_OUT:
+                break;
+            case TRAP_PUTS:
+                break;
+            case TRAP_IN:
+                break;
+            case TRAP_PUTSP:
+                break;
+            case TRAP_HALT:
+                running = false;
+                break;
+            default:
+                break;
+        }
+    }
+
     public void run() {
-        boolean running = true;
-        this.registers[Register.PC.ordinal()] = (short) PC_START;
+        running = true;
+        registers[Register.PC.ordinal()] = (short) PC_START;
 
         while (running) {
             int instruction = 0;
@@ -261,6 +285,7 @@ public class LC3 {
                     loadEffectiveAddress(instruction);
                     break;
                 case OP_TRAP:
+                    trap(instruction);
                     break;
                 default:
                     System.out.println("Op Code Not Supported");
