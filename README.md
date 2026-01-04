@@ -1,6 +1,6 @@
 # Java LC 3
 
-LC 3 is an educational virtual machine architecture.
+LC 3 is an educational virtual machine architecture.  I implemented LC 3 in Java to get a better feel for the language.
 
 ## Registers
 LC3 has ten registers, eight of them are general purpose registers, one stores the program counter and another sets the condition flag.

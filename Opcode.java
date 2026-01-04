@@ -16,5 +16,12 @@ public enum Opcode {
     OP_JMP,
     OP_RES,
     OP_LEA,
-    OP_TRAP,
+    OP_TRAP;
+
+    public static Opcode fromInt(int value) {
+        if (value >= 0 && value < values().length) {
+            return values()[value];
+        }
+        return null;
+    }
 }
