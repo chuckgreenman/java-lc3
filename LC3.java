@@ -34,9 +34,11 @@ public class LC3 {
         if (registers[r] == 0) {
             registers[Register.COND.ordinal()] = Condition.FL_ZERO.getValue();
         } else if ((registers[r] >> 15) != 0) {
-            registers[Register.COND.ordinal()] = Condition.FL_NEGATIVE.getValue();
+            registers[Register.COND.ordinal()] =
+                Condition.FL_NEGATIVE.getValue();
         } else {
-            registers[Register.COND.ordinal()] = Condition.FL_POSITIVE.getValue();
+            registers[Register.COND.ordinal()] =
+                Condition.FL_POSITIVE.getValue();
         }
     }
 
@@ -61,13 +63,22 @@ public class LC3 {
         int r1 = (instruction >> 6) & 0x7;
         int immediate_flag = (instruction >> 5) & 0x1;
 
-        if (immediate_flag) {
-            int immediate_value = sign_extend(instruction & 0x1F, 5);
-            registers[r0] = registers[rq] & immediate_value;
+        if (immediate_flag != 0) {
+            int immediate_value = signExtend(instruction & 0x1F, 5);
+            registers[r0] = registers[r1] & immediate_value;
         } else {
             int r2 = instruction & 0x7;
             registers[r0] = registers[r1] & registers[r2];
         }
+
+        updateFlags(r0);
+    }
+
+    public void not(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int r1 = (instruction >> 6) & 0x7;
+
+        registers[r0] = ~registers[r1];
 
         updateFlags(r0);
     }
@@ -93,7 +104,7 @@ public class LC3 {
                 case OP_JSR:
                     break;
                 case OP_AND:
-                    and(instruction)
+                    and(instruction);
                     break;
                 case OP_LDR:
                     break;
@@ -102,6 +113,7 @@ public class LC3 {
                 case OP_RTI:
                     break;
                 case OP_NOT:
+                    not(instruction);
                     break;
                 case OP_LDI:
                     break;
