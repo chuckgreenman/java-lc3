@@ -56,6 +56,22 @@ public class LC3 {
         updateFlags(r0);
     }
 
+    public void and(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int r1 = (instruction >> 6) & 0x7;
+        int immediate_flag = (instruction >> 5) & 0x1;
+
+        if (immediate_flag) {
+            int immediate_value = sign_extend(instruction & 0x1F, 5);
+            registers[r0] = registers[rq] & immediate_value;
+        } else {
+            int r2 = instruction & 0x7;
+            registers[r0] = registers[r1] & registers[r2];
+        }
+
+        updateFlags(r0);
+    }
+
     public void run() {
         boolean running = true;
         this.registers[Register.PC.ordinal()] = (short) PC_START;
@@ -77,6 +93,7 @@ public class LC3 {
                 case OP_JSR:
                     break;
                 case OP_AND:
+                    and(instruction)
                     break;
                 case OP_LDR:
                     break;
