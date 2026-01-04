@@ -222,6 +222,7 @@ public class LC3 {
                 trapPuts();
                 break;
             case TRAP_IN:
+                trapIn();
                 break;
             case TRAP_PUTSP:
                 break;
@@ -246,6 +247,21 @@ public class LC3 {
     public void trapOut() {
         char c = (char) (registers[Register.R1.ordinal()] & 0xFF);
         System.out.print(c);
+    }
+
+    public void trapIn() {
+        System.out.println("Enter a character: ");
+
+        try {
+            int c = System.in.read();
+
+            System.out.print((char) c);
+
+            registers[Register.R0.ordinal()] = (int) c;
+            updateFlags(Register.R0.ordinal());
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void run() {
