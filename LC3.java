@@ -225,6 +225,7 @@ public class LC3 {
                 trapIn();
                 break;
             case TRAP_PUTSP:
+                trapPutsp();
                 break;
             case TRAP_HALT:
                 running = false;
@@ -261,6 +262,20 @@ public class LC3 {
             updateFlags(Register.R0.ordinal());
         } catch (java.io.IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void trapPutsp() {
+        int address = registers[Register.R0.ordinal()];
+        int value;
+        while ((value = memory[address]) != 0) {
+            char c1 = (char) (value & 0xFF);
+            System.out.print(c1);
+            char c2 = (char) ((value >> 8) & 0xFF);
+            if (c2 != 0) {
+                System.out.print(c2);
+            }
+            address++;
         }
     }
 
