@@ -155,6 +155,18 @@ public class LC3 {
         );
     }
 
+    public void storeIndirect(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int program_counter_offset = signExtend(instruction & 0x1FF, 9);
+
+        memoryWrite(
+            memoryRead(
+                registers[Register.PC.ordinal() + program_counter_offset]
+            ),
+            registers[r0]
+        );
+    }
+
     public void memoryWrite(int address, int value) {
         memory[address] = value;
     }
@@ -226,6 +238,7 @@ public class LC3 {
                 case OP_LDI:
                     break;
                 case OP_STI:
+                    storeIndirect(instruction);
                     break;
                 case OP_JMP:
                     jump(instruction);
