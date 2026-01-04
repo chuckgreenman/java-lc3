@@ -98,6 +98,19 @@ public class LC3 {
         registers[Register.PC.ordinal()] = registers[r1];
     }
 
+    public void jumpRegister(int instruction) {
+        int long_flag = (instruction >> 11) & 1;
+        registers[Register.R7.ordinal()] = registers[Register.PC.ordinal()];
+
+        if (long_flag != 0) {
+            long_pc_offset = signExtend(instruction & 0x7FF, 11);
+            registers[Register.PC.ordinal()] = long_pc_offset;
+        } else {
+            int r1 = (instruction >> 6) & 0x7;
+            registers[Register.PC.ordinal()] = registers[r1];
+        }
+    }
+
     public void run() {
         boolean running = true;
         this.registers[Register.PC.ordinal()] = (short) PC_START;
@@ -136,6 +149,7 @@ public class LC3 {
                 case OP_STI:
                     break;
                 case OP_JMP:
+                    jump(instruction);
                     break;
                 case OP_RES:
                     break;
