@@ -111,6 +111,10 @@ public class LC3 {
         }
     }
 
+    public void memoryWrite(int address, int value) {
+        memory[address] = value;
+    }
+
     public void run() {
         boolean running = true;
         this.registers[Register.PC.ordinal()] = (short) PC_START;
