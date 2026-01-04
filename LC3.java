@@ -17,5 +17,9 @@ public class LC3 {
         for (Opcode opc : Opcode.values()) {
             System.out.println(opc);
         }
+
+        for (Condition cond : Condition.values()) {
+            System.out.println(cond.getValue());
+        }
     }
 }
