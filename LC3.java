@@ -167,6 +167,14 @@ public class LC3 {
         );
     }
 
+    public void storeRegister(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int r1 = (instruction >> 6) & 0x7;
+        int offset = signExtend(instruction & 0x3F, 6);
+
+        memoryWrite(registers[r1] + offset, registers[r1]);
+    }
+
     public void memoryWrite(int address, int value) {
         memory[address] = value;
     }
@@ -221,6 +229,7 @@ public class LC3 {
                     store(instruction);
                     break;
                 case OP_JSR:
+                    jumpRegister(instruction);
                     break;
                 case OP_AND:
                     and(instruction);
@@ -229,8 +238,10 @@ public class LC3 {
                     loadRegister(instruction);
                     break;
                 case OP_STR:
+                    storeRegister(instruction);
                     break;
                 case OP_RTI:
+                    // Unused
                     break;
                 case OP_NOT:
                     not(instruction);
@@ -244,6 +255,7 @@ public class LC3 {
                     jump(instruction);
                     break;
                 case OP_RES:
+                    // Unused
                     break;
                 case OP_LEA:
                     loadEffectiveAddress(instruction);
