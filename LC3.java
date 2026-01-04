@@ -85,9 +85,9 @@ public class LC3 {
 
     public void branch(int instruction) {
         int program_counter_offset = signExtend(instruction & 0x1FF, 9);
-        int conidtion_flag = (instruction >> 9) & 0x7;
+        int condition_flag = (instruction >> 9) & 0x7;
 
-        if (condition_flag & registers[Register.COND.ordinal()]) {
+        if ((condition_flag & registers[Register.COND.ordinal()]) != 0) {
             registers[Register.PC.ordinal()] += program_counter_offset;
         }
     }
