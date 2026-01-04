@@ -126,6 +126,16 @@ public class LC3 {
         updateFlags(r0);
     }
 
+    public void loadRegister(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int r1 = (instruction >> 6) & 0x7;
+
+        int offset = signExtend(instruction & 0x3F, 6);
+
+        registers[r0] = memoryRead(registers[r1] + offset);
+        updateFlags(r0);
+    }
+
     public void memoryWrite(int address, int value) {
         memory[address] = value;
     }
