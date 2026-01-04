@@ -136,6 +136,15 @@ public class LC3 {
         updateFlags(r0);
     }
 
+    public void loadEffectiveAddress(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int program_counter_offset = signExtend(instruction & 0x1FF, 9);
+
+        registers[r0] =
+            registers[Register.PC.ordinal()] + program_counter_offset;
+        updateFlags(r0);
+    }
+
     public void memoryWrite(int address, int value) {
         memory[address] = value;
     }
@@ -212,6 +221,7 @@ public class LC3 {
                 case OP_RES:
                     break;
                 case OP_LEA:
+                    loadEffectiveAddress(instruction);
                     break;
                 case OP_TRAP:
                     break;
