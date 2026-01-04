@@ -145,6 +145,16 @@ public class LC3 {
         updateFlags(r0);
     }
 
+    public void store(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int program_counter_offset = signExtend(instruction & 0x1FF, 9);
+
+        memoryWrite(
+            registers[Register.PC.ordinal()] + program_counter_offset,
+            registers[r0]
+        );
+    }
+
     public void memoryWrite(int address, int value) {
         memory[address] = value;
     }
@@ -196,6 +206,7 @@ public class LC3 {
                     load(instruction);
                     break;
                 case OP_ST:
+                    store(instruction);
                     break;
                 case OP_JSR:
                     break;
@@ -203,6 +214,7 @@ public class LC3 {
                     and(instruction);
                     break;
                 case OP_LDR:
+                    loadRegister(instruction);
                     break;
                 case OP_STR:
                     break;
