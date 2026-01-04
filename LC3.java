@@ -6,13 +6,12 @@ public class LC3 {
     private static final int REGISTER_COUNT = 10;
     private static final int PC_START = 0x3000;
 
-    private final short[] memory = new short[MAX_ADDRESSABLE_MEMORY];
-    private final short[] registers = new short[REGISTER_COUNT];
+    private final int[] memory = new int[MAX_ADDRESSABLE_MEMORY];
+    private final int[] registers = new int[REGISTER_COUNT];
 
     public static void main(String[] args) {
-        loadImages(args)
-
         LC3 vm = new LC3();
+        vm.loadImages(args);
         vm.run();
     }
 
@@ -22,6 +21,39 @@ public class LC3 {
                 "Usage: java lc3 [image file path]"
             );
         }
+    }
+
+    public int signExtend(int x, int bit_count) {
+        if (((x >> (bit_count - 1)) & 1) != 0) {
+            x |= (0xFFFF << bit_count);
+        }
+        return x;
+    }
+
+    public void updateFlags(int r) {
+        if (registers[r] == 0) {
+            registers[Register.COND.ordinal()] = Condition.FL_ZERO.getValue();
+        } else if ((registers[r] >> 15) != 0) {
+            registers[Register.COND.ordinal()] = Condition.FL_NEGATIVE.getValue();
+        } else {
+            registers[Register.COND.ordinal()] = Condition.FL_POSITIVE.getValue();
+        }
+    }
+
+    public void add(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int r1 = (instruction >> 6) & 0x7;
+        int immediate_flag = (instruction >> 5) & 0x1;
+
+        if (immediate_flag != 0) {
+            int immediate_value = signExtend(instruction & 0x1F, 5);
+            registers[r0] = registers[r1] + immediate_value;
+        } else {
+            int r2 = instruction & 0x7;
+            registers[r0] = registers[r1] + registers[r2];
+        }
+
+        updateFlags(r0);
     }
 
     public void run() {
@@ -36,6 +68,7 @@ public class LC3 {
                 case OP_BR:
                     break;
                 case OP_ADD:
+                    add(instruction);
                     break;
                 case OP_LD:
                     break;
