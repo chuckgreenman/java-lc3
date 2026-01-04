@@ -92,6 +92,12 @@ public class LC3 {
         }
     }
 
+    public void jump(int instruction) {
+        int r1 = (instruction >> 6) & 0x7;
+
+        registers[Register.PC.ordinal()] = registers[r1];
+    }
+
     public void run() {
         boolean running = true;
         this.registers[Register.PC.ordinal()] = (short) PC_START;
