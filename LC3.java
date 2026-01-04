@@ -83,6 +83,15 @@ public class LC3 {
         updateFlags(r0);
     }
 
+    public void branch(int instruction) {
+        int program_counter_offset = signExtend(instruction & 0x1FF, 9);
+        int conidtion_flag = (instruction >> 9) & 0x7;
+
+        if (condition_flag & registers[Register.COND.ordinal()]) {
+            registers[Register.PC.ordinal()] += program_counter_offset;
+        }
+    }
+
     public void run() {
         boolean running = true;
         this.registers[Register.PC.ordinal()] = (short) PC_START;
@@ -93,6 +102,7 @@ public class LC3 {
             Opcode op = Opcode.fromInt(opValue);
             switch (op) {
                 case OP_BR:
+                    branch(instruction);
                     break;
                 case OP_ADD:
                     add(instruction);
