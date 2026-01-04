@@ -216,6 +216,7 @@ public class LC3 {
             case TRAP_GETC:
                 break;
             case TRAP_OUT:
+                trapOut();
                 break;
             case TRAP_PUTS:
                 trapPuts();
@@ -240,6 +241,11 @@ public class LC3 {
             address++;
         }
         System.out.flush();
+    }
+
+    public void trapOut() {
+        char c = (char) (registers[Register.R1.ordinal()] & 0xFF);
+        System.out.print(c);
     }
 
     public void run() {
