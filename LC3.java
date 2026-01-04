@@ -218,6 +218,7 @@ public class LC3 {
             case TRAP_OUT:
                 break;
             case TRAP_PUTS:
+                trapPuts();
                 break;
             case TRAP_IN:
                 break;
@@ -229,6 +230,16 @@ public class LC3 {
             default:
                 break;
         }
+    }
+
+    public void trapPuts() {
+        int address = registers[Register.R0.ordinal()];
+        int c;
+        while ((c = memory[address]) != 0) {
+            System.out.print((char) c);
+            address++;
+        }
+        System.out.flush();
     }
 
     public void run() {
