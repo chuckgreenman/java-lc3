@@ -21,7 +21,7 @@ public class LC3 {
     public void loadImages(String[] args) {
         if (args.length == 0) {
             throw new IllegalArgumentException(
-                "Usage: java lc3 [image file path]"
+                "Usage: java com.chuckgreenman.lc3.LC3 [image file path]"
             );
         }
         for (String imagePath : args) {
