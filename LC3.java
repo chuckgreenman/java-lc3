@@ -24,6 +24,31 @@ public class LC3 {
                 "Usage: java lc3 [image file path]"
             );
         }
+        for (String imagePath : args) {
+            readImage(imagePath);
+        }
+    }
+
+    public void readImage(String imagePath) {
+        try (java.io.FileInputStream fis = new java.io.FileInputStream(imagePath)) {
+            int origin = read16(fis);
+            int address = origin;
+            int word;
+            while ((word = read16(fis)) != -1) {
+                memory[address++] = word;
+            }
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("Failed to read image: " + imagePath, e);
+        }
+    }
+
+    private int read16(java.io.FileInputStream fis) throws java.io.IOException {
+        int high = fis.read();
+        int low = fis.read();
+        if (high == -1 || low == -1) {
+            return -1;
+        }
+        return (high << 8) | low;
     }
 
     public int signExtend(int x, int bit_count) {
@@ -52,10 +77,10 @@ public class LC3 {
 
         if (immediate_flag != 0) {
             int immediate_value = signExtend(instruction & 0x1F, 5);
-            registers[r0] = registers[r1] + immediate_value;
+            registers[r0] = (registers[r1] + immediate_value) & 0xFFFF;
         } else {
             int r2 = instruction & 0x7;
-            registers[r0] = registers[r1] + registers[r2];
+            registers[r0] = (registers[r1] + registers[r2]) & 0xFFFF;
         }
 
         updateFlags(r0);
@@ -68,10 +93,10 @@ public class LC3 {
 
         if (immediate_flag != 0) {
             int immediate_value = signExtend(instruction & 0x1F, 5);
-            registers[r0] = registers[r1] & immediate_value;
+            registers[r0] = (registers[r1] & immediate_value) & 0xFFFF;
         } else {
             int r2 = instruction & 0x7;
-            registers[r0] = registers[r1] & registers[r2];
+            registers[r0] = (registers[r1] & registers[r2]) & 0xFFFF;
         }
 
         updateFlags(r0);
@@ -81,7 +106,7 @@ public class LC3 {
         int r0 = (instruction >> 9) & 0x7;
         int r1 = (instruction >> 6) & 0x7;
 
-        registers[r0] = ~registers[r1];
+        registers[r0] = (~registers[r1]) & 0xFFFF;
 
         updateFlags(r0);
     }
@@ -91,14 +116,14 @@ public class LC3 {
         int condition_flag = (instruction >> 9) & 0x7;
 
         if ((condition_flag & registers[Register.COND.ordinal()]) != 0) {
-            registers[Register.PC.ordinal()] += program_counter_offset;
+            registers[Register.PC.ordinal()] = (registers[Register.PC.ordinal()] + program_counter_offset) & 0xFFFF;
         }
     }
 
     public void jump(int instruction) {
         int r1 = (instruction >> 6) & 0x7;
 
-        registers[Register.PC.ordinal()] = registers[r1];
+        registers[Register.PC.ordinal()] = registers[r1] & 0xFFFF;
     }
 
     public void jumpRegister(int instruction) {
@@ -110,10 +135,10 @@ public class LC3 {
                 instruction & 0x7FF,
                 11
             );
-            registers[Register.PC.ordinal()] = long_program_counter_offset;
+            registers[Register.PC.ordinal()] = (registers[Register.PC.ordinal()] + long_program_counter_offset) & 0xFFFF;
         } else {
             int r1 = (instruction >> 6) & 0x7;
-            registers[Register.PC.ordinal()] = registers[r1];
+            registers[Register.PC.ordinal()] = registers[r1] & 0xFFFF;
         }
     }
 
@@ -122,7 +147,7 @@ public class LC3 {
         int program_counter_offset = signExtend(instruction & 0x1FF, 9);
 
         registers[r0] = memoryRead(
-            registers[Register.PC.ordinal()] + program_counter_offset
+            (registers[Register.PC.ordinal()] + program_counter_offset) & 0xFFFF
         );
         updateFlags(r0);
     }
@@ -133,7 +158,16 @@ public class LC3 {
 
         int offset = signExtend(instruction & 0x3F, 6);
 
-        registers[r0] = memoryRead(registers[r1] + offset);
+        registers[r0] = memoryRead((registers[r1] + offset) & 0xFFFF);
+        updateFlags(r0);
+    }
+
+    public void loadIndirect(int instruction) {
+        int r0 = (instruction >> 9) & 0x7;
+        int program_counter_offset = signExtend(instruction & 0x1FF, 9);
+
+        int address = memoryRead((registers[Register.PC.ordinal()] + program_counter_offset) & 0xFFFF);
+        registers[r0] = memoryRead(address & 0xFFFF);
         updateFlags(r0);
     }
 
@@ -142,7 +176,7 @@ public class LC3 {
         int program_counter_offset = signExtend(instruction & 0x1FF, 9);
 
         registers[r0] =
-            registers[Register.PC.ordinal()] + program_counter_offset;
+            (registers[Register.PC.ordinal()] + program_counter_offset) & 0xFFFF;
         updateFlags(r0);
     }
 
@@ -151,7 +185,7 @@ public class LC3 {
         int program_counter_offset = signExtend(instruction & 0x1FF, 9);
 
         memoryWrite(
-            registers[Register.PC.ordinal()] + program_counter_offset,
+            (registers[Register.PC.ordinal()] + program_counter_offset) & 0xFFFF,
             registers[r0]
         );
     }
@@ -162,8 +196,8 @@ public class LC3 {
 
         memoryWrite(
             memoryRead(
-                registers[Register.PC.ordinal() + program_counter_offset]
-            ),
+                (registers[Register.PC.ordinal()] + program_counter_offset) & 0xFFFF
+            ) & 0xFFFF,
             registers[r0]
         );
     }
@@ -173,7 +207,7 @@ public class LC3 {
         int r1 = (instruction >> 6) & 0x7;
         int offset = signExtend(instruction & 0x3F, 6);
 
-        memoryWrite(registers[r1] + offset, registers[r1]);
+        memoryWrite((registers[r1] + offset) & 0xFFFF, registers[r0]);
     }
 
     public void memoryWrite(int address, int value) {
@@ -190,7 +224,12 @@ public class LC3 {
 
     private int getChar() {
         try {
-            return System.in.read();
+            int c = System.in.read();
+            if (c == -1) {
+                running = false;
+                return 0;
+            }
+            return c;
         } catch (java.io.IOException e) {
             throw new RuntimeException(e);
         }
@@ -200,10 +239,12 @@ public class LC3 {
         if (address == KEYBOARD_STATUS_REGISTER) {
             if (checkKey()) {
                 memory[KEYBOARD_STATUS_REGISTER] = (1 << 15);
-                memory[KEYBOARD_DATA_REGISTER] = getChar();
             } else {
                 memory[KEYBOARD_STATUS_REGISTER] = 0;
             }
+        } else if (address == KEYBOARD_DATA_REGISTER) {
+            memory[KEYBOARD_STATUS_REGISTER] = 0;
+            memory[KEYBOARD_DATA_REGISTER] = getChar();
         }
         return memory[address];
     }
@@ -214,6 +255,7 @@ public class LC3 {
 
         switch (trap) {
             case TRAP_GETC:
+                trapGetc();
                 break;
             case TRAP_OUT:
                 trapOut();
@@ -235,6 +277,20 @@ public class LC3 {
         }
     }
 
+    public void trapGetc() {
+        try {
+            int c = System.in.read();
+            if (c == -1) {
+                running = false;
+                return;
+            }
+            registers[Register.R0.ordinal()] = c;
+            updateFlags(Register.R0.ordinal());
+        } catch (java.io.IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void trapPuts() {
         int address = registers[Register.R0.ordinal()];
         int c;
@@ -246,8 +302,9 @@ public class LC3 {
     }
 
     public void trapOut() {
-        char c = (char) (registers[Register.R1.ordinal()] & 0xFF);
+        char c = (char) (registers[Register.R0.ordinal()] & 0xFF);
         System.out.print(c);
+        System.out.flush();
     }
 
     public void trapIn() {
@@ -284,7 +341,8 @@ public class LC3 {
         registers[Register.PC.ordinal()] = (short) PC_START;
 
         while (running) {
-            int instruction = 0;
+            int instruction = memoryRead(registers[Register.PC.ordinal()] & 0xFFFF);
+            registers[Register.PC.ordinal()] = (registers[Register.PC.ordinal()] + 1) & 0xFFFF;
             int opValue = instruction >> 12;
             Opcode op = Opcode.fromInt(opValue);
             switch (op) {
@@ -319,6 +377,7 @@ public class LC3 {
                     not(instruction);
                     break;
                 case OP_LDI:
+                    loadIndirect(instruction);
                     break;
                 case OP_STI:
                     storeIndirect(instruction);
@@ -340,7 +399,6 @@ public class LC3 {
                     running = false;
                     break;
             }
-            running = false;
         }
     }
 }
